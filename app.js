@@ -1,4 +1,5 @@
 //jshint esversion:6
+require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
@@ -9,8 +10,7 @@ const app = express();
 const port = 3000;
 
 //Connecting to monfgoDB
-const URI =
-  "mongodb+srv://subashkarki68:lpGPJ9WHOzBsULZ2@cluster0.c3sr77b.mongodb.net/";
+const URI = process.env.MONGOOSE_URI;
 const dbName = "secretsDB";
 
 mongoose.connect(URI + dbName, function (err) {
@@ -36,7 +36,7 @@ const userSchema = new Schema({
 });
 
 // var secret = process.env.SOME_LONG_UNGUESSABLE_STRING;
-var secret = "secret";
+var secret = process.env.SECRET_KEY;
 userSchema.plugin(encrypt, { secret: secret, encryptedFields: ["password"] });
 
 const User = mongoose.model("User", userSchema);
