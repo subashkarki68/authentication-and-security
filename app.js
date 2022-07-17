@@ -58,10 +58,16 @@ const userSchema = new Schema({
   facebookId: String,
 });
 
+const postSchema = new Schema({
+  whoPosted: String,
+  content: String,
+});
+
 userSchema.plugin(passportLocalMongoose);
 userSchema.plugin(findOrCreate);
 
 const User = mongoose.model("User", userSchema);
+const Post = mongoose.model("Post", postSchema);
 
 passport.use(User.createStrategy());
 
@@ -105,7 +111,7 @@ passport.use(
 
 app.get("/", (req, res) => {
   if (req.isAuthenticated()) {
-    res.render("secrets");
+    res.redirect("secrets");
   } else {
     res.render("home");
   }
@@ -141,7 +147,18 @@ app.get("/register", (req, res) => {
 
 app.get("/secrets", (req, res) => {
   if (req.isAuthenticated()) {
-    res.render("secrets");
+    Post.find({}, function (err, docs) {
+      if (!err) {
+        res.render("secrets", {
+          allPosts: docs,
+        });
+        console.log("Successful");
+        console.log(docs);
+      } else {
+        console.log(err);
+        res.redirect("/");
+      }
+    });
   } else {
     res.redirect("/login");
   }
@@ -191,6 +208,27 @@ app.get("/logout", (req, res) => {
     }
     res.redirect("/");
   });
+});
+
+app.get("/submit", (req, res) => {
+  if (req.isAuthenticated()) {
+    res.render("submit");
+  } else {
+    res.redirect("/login");
+  }
+});
+
+app.post("/submit", (req, res) => {
+  if (req.isAuthenticated()) {
+    const newPost = new Post({
+      whoPosted: req.user._id,
+      content: req.body.secret,
+    });
+    newPost.save();
+    res.redirect("/secrets");
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.listen(port, () => {
